@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("CITIZEN") // CITIZEN | ADMIN | DEPT_OFFICER
+  departmentId Int?
+  createdAt    DateTime @default(now())
+
+  department   Department?       @relation(fields: [departmentId], references: [id])
+  complaints   Complaint[]
+  updates      ComplaintUpdate[]
+}
+
+model Department {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String
+  keywords    String   // comma-separated keywords for routing
+
+  users       User[]
+  complaints  Complaint[]
+  categories  Category[]
+}
+
+model Category {
+  id           Int      @id @default(autoincrement())
+  name         String   @unique
+  description  String
+  keywords     String   // comma-separated keywords for matching
+  departmentId Int
+
+  department   Department  @relation(fields: [departmentId], references: [id])
+  complaints   Complaint[]
+}
+
+model Complaint {
+  id              Int      @id @default(autoincrement())
+  trackingId      String   @unique
+  title           String
+  description     String
+  status          String   @default("SUBMITTED") // SUBMITTED | UNDER_REVIEW | IN_PROGRESS | RESOLVED | REJECTED
+  priority        String   @default("MEDIUM")     // LOW | MEDIUM | HIGH | URGENT
+  locationLat     Float?
+  locationLng     Float?
+  locationAddress String?
+  imagePath       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  userId          Int
+  categoryId      Int?
+  departmentId    Int?
+
+  user            User           @relation(fields: [userId], references: [id])
+  category        Category?      @relation(fields: [categoryId], references: [id])
+  department      Department?    @relation(fields: [departmentId], references: [id])
+  aiAnalysis      AIAnalysis?
+  updates         ComplaintUpdate[]
+
+  @@index([status])
+  @@index([trackingId])
+}
+
+model AIAnalysis {
+  id                 Int      @id @default(autoincrement())
+  complaintId        Int      @unique
+  tamperingScore     Float    @default(0)
+  elaImagePath       String?
+  metadataFlags      String   @default("[]") // JSON string array
+  duplicateOfId      Int?
+  similarityScore    Float?
+  autoCategory       String?
+  categoryConfidence Float?
+  isFlagged          Boolean  @default(false)
+  analysisData       String?  // JSON string
+  createdAt          DateTime @default(now())
+
+  complaint          Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+}
+
+model ComplaintUpdate {
+  id          Int      @id @default(autoincrement())
+  complaintId Int
+  officerId   Int?
+  status      String
+  comment     String
+  createdAt   DateTime @default(now())
+
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  officer     User?     @relation(fields: [officerId], references: [id])
+}
