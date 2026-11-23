@@ -1,4 +1,4 @@
-# Jan-Samadhan: Smart Grievance Redressal & Fake Complaint Detection System
+## Jan-Samadhan: Smart Grievance Redressal & Fake Complaint Detection System
 
 An enterprise-grade, AI-powered citizen grievance redressal portal built for municipal and state administrations. The system inspects photographic evidence for digital tampering, clusters duplicate submissions using NLP and geospatial proximity, automatically classifies issues, and routes them to appropriate nodal government departments.
 
